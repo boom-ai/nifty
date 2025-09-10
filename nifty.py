@@ -66,7 +66,7 @@ vol_ratio_min = st.sidebar.slider("Min Volume Ratio", 0.5, 2.0, 0.8)
 volatility_max = st.sidebar.slider("Max Volatility", 20, 80, 50)
 run = st.sidebar.button('Run NIFTY Screening')
 
-st.header("NIFTY Stock Screener")
+st.header("💰 NIFTY Stock Screener")
 st.info("This app screens the NIFTY 50 stocks based on a set of technical indicators. You can customize the screening criteria from the sidebar and find the top 5 recommendations for your investment.")
 
 
