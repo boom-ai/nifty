@@ -84,7 +84,10 @@ if run:
             for stock_symbol in selected_stocks:
                 try:
                     stock_data = yf.Ticker(f"{stock_symbol}.NS").history(period="6mo")
-                    st.line_chart(stock_data['Close'])
+                    if not stock_data.empty:
+                        st.line_chart(stock_data['Close'])
+                    else:
+                        st.warning(f"No historical data found for {stock_symbol}.")
                 except Exception as e:
                     st.warning(f"Could not fetch chart for {stock_symbol}. Error: {e}")
     else:
