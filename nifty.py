@@ -82,8 +82,11 @@ if run:
         selected_stocks = st.multiselect("Select stocks to view charts", options=df['Stock'].tolist())
         if selected_stocks:
             for stock_symbol in selected_stocks:
-                stock_data = yf.Ticker(f"{stock_symbol}.NS").history(period="6mo")
-                st.line_chart(stock_data['Close'])
+                try:
+                    stock_data = yf.Ticker(f"{stock_symbol}.NS").history(period="6mo")
+                    st.line_chart(stock_data['Close'])
+                except Exception as e:
+                    st.warning(f"Could not fetch chart for {stock_symbol}. Error: {e}")
     else:
         st.warning("No NIFTY stocks meet today's criteria. Try again later.")
     st.write(f"Analyzed {len(allc)} stocks that passed MA/volume/volatility rules.")
