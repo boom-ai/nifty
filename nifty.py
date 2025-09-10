@@ -41,12 +41,12 @@ def get_stock_info(symbol):
     except:
         return None
 
-def run_nifty_screening(capital):
+def run_nifty_screening(capital, dev_max, vol_ratio_min, volatility_max):
     symbols = get_nifty50_symbols()
     candidates = []
     for symbol in symbols:
         info = get_stock_info(symbol)
-        if info and info['Price'] < info['MA-20'] and info['Dev%'] > -10 and info['Vol Ratio'] > 0.8 and info['Volatility'] < 50:
+        if info and info['Price'] < info['MA-20'] and info['Dev%'] > dev_max and info['Vol Ratio'] > vol_ratio_min and info['Volatility'] < volatility_max:
             candidates.append(info)
     candidates.sort(key=lambda x: x['Dev%'])
     picks = candidates[:5]
@@ -58,19 +58,32 @@ def run_nifty_screening(capital):
 
 st.set_page_config(page_title="NIFTY", page_icon=":chart_with_upwards_trend:")
 
-st.title("NIFTY")
-st.write("Find the best NIFTY 50 stocks to buy today using your custom screening strategy.")
+st.sidebar.title("NIFTY")
+capital = st.sidebar.number_input("Capital for investment (INR)", min_value=10000, max_value=5000000, value=100000, step=10000)
+st.sidebar.header("Screening Parameters")
+dev_max = st.sidebar.slider("Max Deviation %", -20, 0, -10)
+vol_ratio_min = st.sidebar.slider("Min Volume Ratio", 0.5, 2.0, 0.8)
+volatility_max = st.sidebar.slider("Max Volatility", 20, 80, 50)
+run = st.sidebar.button('Run NIFTY Screening')
 
-capital = st.number_input("Capital for investment (INR)", min_value=10000, max_value=5000000, value=100000, step=10000)
-run = st.button('Run NIFTY Screening')
+st.header("💰 NIFTY Stock Screener")
+st.info("This app screens the NIFTY 50 stocks based on a set of technical indicators. You can customize the screening criteria from the sidebar and find the top 5 recommendations for your investment.")
+
 
 if run:
     with st.spinner("Analyzing NIFTY 50..."):
-        allc, recs = run_nifty_screening(capital)
+        allc, recs = run_nifty_screening(capital, dev_max, vol_ratio_min, volatility_max)
     st.write(f"### {len(recs)} Recommendations for ₹{capital:,}")
     if recs and len(recs) > 0:
         df = pd.DataFrame(recs)[['Stock','Price','MA-20','Dev%','Vol Ratio','Volatility','Qty','Amount']]
-        st.table(df)
+        st.dataframe(df.style.format({'Price':'₹{:.2f}', 'MA-20':'₹{:.2f}', 'Amount':'₹{:,.2f}'}).applymap(lambda x: 'color: red' if x < 0 else 'color: green', subset=['Dev%']))
+
+        st.header("Historical Price Charts")
+        selected_stocks = st.multiselect("Select stocks to view charts", options=df['Stock'].tolist())
+        if selected_stocks:
+            for stock_symbol in selected_stocks:
+                stock_data = yf.Ticker(f"{stock_symbol}.NS").history(period="6mo")
+                st.line_chart(stock_data['Close'])
     else:
         st.warning("No NIFTY stocks meet today's criteria. Try again later.")
     st.write(f"Analyzed {len(allc)} stocks that passed MA/volume/volatility rules.")
